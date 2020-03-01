@@ -1,22 +1,45 @@
+use crate::from_map::FromMap;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
-use crate::from_map::FromMap;
 
-pub struct Parser<T> 
+
+#[derive(Clone)]
+pub struct Parser<T>
 where
-    T: std::fmt::Debug
+    T: FromMap<T> + std::fmt::Debug + std::clone::Clone + std::cmp::PartialEq,
 {
     content: String,
     index: usize,
     split_tokens: HashMap<&'static str, T>,
     tokens: Vec<T>,
+    iterator_current: usize,
 }
 
-impl<T> Parser<T> 
+impl<T> Iterator for Parser<T>
 where
-    T: FromMap<T>,
-    T: std::fmt::Debug
+    T: FromMap<T> + std::fmt::Debug + std::clone::Clone + std::cmp::PartialEq,
+{
+    type Item = T;
+
+    fn next(&mut self) -> std::option::Option<T> {
+        if self.iterator_current < self.tokens.len() {
+            let mut result = self.tokens[self.iterator_current].clone();
+            self.iterator_current += 1;
+            while result.skip() && self.iterator_current < self.tokens.len() {
+                result = self.tokens[self.iterator_current].clone();
+                self.iterator_current += 1;
+            }
+            Some(result)
+        } else {
+            None
+        }
+    }
+}
+
+impl<T> Parser<T>
+where
+    T: FromMap<T> + std::fmt::Debug + std::clone::Clone + std::cmp::PartialEq,
 {
     pub fn new(data: String, split_tokens: HashMap<&'static str, T>) -> Self {
         let mut data = Self {
@@ -24,6 +47,7 @@ where
             index: 0,
             split_tokens: split_tokens,
             tokens: vec![],
+            iterator_current: 0,
         };
         data.tokenize();
         println!("{:?}", data.tokens);
@@ -54,6 +78,14 @@ where
         }
     }
 
+    fn next_is(&mut self, val: T) -> bool {
+        if self.iterator_current >= self.tokens.len() {
+            return false;
+        }
+        let value = self.tokens[self.iterator_current].clone();
+        value == val
+    }
+
     fn tokenize(&mut self) {
         let mut index = 0;
         while index < self.content.len() {
@@ -69,15 +101,24 @@ where
                 );
                 tokens.push(token.0.to_string());
             }
-            println!("Indices: {:#?}", indices);
 
             let min = Parser::<T>::get_smallest_index(&indices).unwrap();
-            println!("Min: {}", min);
-            self.tokens.push(T::from(&self.split_tokens, tokens[min].clone()));
-            self.tokens
-                .push(T::from(&self.split_tokens, self.content[index..indices[min]].to_string()));
+            println!("{:?}[{}] -> {}", tokens, min, tokens[min]);
+            let str_tok = T::from(
+                &self.split_tokens,
+                self.content[index..indices[min]].trim().to_owned(),
+            );
+            let delim = T::from(&self.split_tokens, tokens[min].trim().to_owned());
+            println!("string token = {:?}, delim = {:?}", str_tok, delim);
+
+            if !str_tok.skip() {
+                self.tokens.push(str_tok);
+            }
+            if !delim.skip() {
+                self.tokens.push(delim);
+            }
             index = indices[min] + tokens[min].len();
-            println!("Index: {}", index);
+            println!("{}", index);
         }
     }
 

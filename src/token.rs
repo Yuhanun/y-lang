@@ -1,7 +1,7 @@
-pub use std::collections::HashMap;
 use parser::from_map::FromMap;
+pub use std::collections::HashMap;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Token {
     MemberAccess,
     LogicOr,
@@ -13,16 +13,26 @@ pub enum Token {
     NamespaceOrStaticAccess,
     Multiply,
     Dereference,
-    Token(String)
+    VariableDefinition,
+    LogicEquals,
+    Assignment,
+    ExpressionEnd,
+    Token(String),
 }
 
 impl FromMap<Token> for Token {
     fn from(map: &HashMap<&str, Self>, data: String) -> Self {
-        println!("{:?} {}", map, data);
         if let Some(data) = map.get(&data[..]) {
             data.clone()
         } else {
             Token::Token(data)
+        }
+    }
+
+    fn skip(&self) -> bool {
+        match self {
+            Token::Token(val) => val.is_empty(),
+            _ => false,
         }
     }
 }
