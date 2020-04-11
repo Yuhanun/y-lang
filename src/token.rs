@@ -17,6 +17,7 @@ pub enum Token {
     LogicEquals,
     Assignment,
     ExpressionEnd,
+    TypeAnnotation,
     Token(String),
 }
 

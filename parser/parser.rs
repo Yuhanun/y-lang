@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 
-
 #[derive(Clone)]
 pub struct Parser<T>
 where
@@ -130,5 +129,17 @@ where
         let data = String::from(self.content.get(self.index..count)?);
         self.skip(count);
         Some(data)
+    }
+
+    pub fn skipt_to_token(&mut self, tok_type: T) -> Option<Vec<T>> {
+        let mut data = vec![];
+        for i in self.iterator_current..self.tokens.len() {
+            self.iterator_current += 1;
+            data.push(self.tokens[i].clone());
+            if self.tokens[i] == tok_type {
+                return Some(data);
+            }
+        }
+        None
     }
 }

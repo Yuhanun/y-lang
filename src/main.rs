@@ -3,10 +3,11 @@ pub use parser::parser::Parser;
 pub use std::collections::HashMap;
 
 mod token;
+mod variables;
 pub use token::Token;
 
 fn main() {
-    // let mut data: HashMap<String, String> = HashMap::new();
+    let mut variables: HashMap<String, String> = HashMap::new();
 
     let mut tokens = HashMap::new();
     tokens.insert(".", Token::MemberAccess);
@@ -23,6 +24,7 @@ fn main() {
     tokens.insert("==", Token::LogicEquals);
     tokens.insert("=", Token::Assignment);
     tokens.insert(";", Token::ExpressionEnd);
+    tokens.insert(":", Token::TypeAnnotation);
     // modulo
     // +=
     // /=
@@ -35,69 +37,11 @@ fn main() {
         println!("{:?}", tok);
         match tok {
             Token::VariableDefinition => {
-                let variable_name = tokens.next();
-                let assignment_or_end = tokens.next();
-                
-                if let None = variable_name {
-                    println!("Expected variable name, found EOF");
-                    return;
-                }
-                
-                if let None = assignment_or_end {
-                    println!("Expected either of `=`, `;`, found EOF");
-                }
+                let toks = tokens.skipt_to_token(Token::ExpressionEnd);
+                println!("skipt_to_token: {:?}", toks);
 
-                let name_token = variable_name.unwrap();
-
-                let mut variable_name = String::new();
-                if let Token::Token(name) = name_token {
-                    variable_name = name.clone();
-                } else {
-                    println!("Expected variable name, found {:?}", name_token);
-                }
-
-                let assignment_or_end = assignment_or_end.unwrap();
-
-                match assignment_or_end {
-                    Token::Assignment => {
-                        let initial_value = tokens.next();
-                        if let None = initial_value {
-                            println!("Expected value, found None");
-                            return;
-                        }
-
-                        let initial_value = initial_value.unwrap();
-                        if let Token::Token(val) = initial_value {
-                            println!("Variable named: {:?} = {:?}", variable_name, val);
-                        } else {
-                            println!("Expected value, found {:?}", initial_value);
-                        }
-
-                        let end_token = tokens.next();
-                        
-                        if let None = end_token {
-                            println!("Expected ';', found EOF");
-                            return;
-                        }
-
-                        let end_token = end_token.unwrap();
-
-                        if let Token::ExpressionEnd = end_token {
-
-                        } else {
-                            println!("Expected ';', found {:?}", end_token);
-                        }
-
-                        
-                    },
-                    Token::ExpressionEnd => {
-                        println!("Variable named: {:?}, no type known", variable_name);
-                    },
-                    val => {
-                        println!("Expected either of `=`, `;`, found {:?}", val);
-                        return;
-                    }
-                }
+                let result = variables::variable_decl(toks, &mut variables);
+                println!("{:?}", result);
             }
             _ => {}
         }
