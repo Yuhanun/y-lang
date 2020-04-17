@@ -25,6 +25,7 @@ fn main() {
     tokens.insert("=", Token::Assignment);
     tokens.insert(";", Token::ExpressionEnd);
     tokens.insert(":", Token::TypeAnnotation);
+    // tokens.insert("\"", Token::StringDelimiter);
     // modulo
     // +=
     // /=

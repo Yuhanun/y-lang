@@ -18,6 +18,7 @@ pub enum Token {
     Assignment,
     ExpressionEnd,
     TypeAnnotation,
+    StringDelimiter,
     Token(String),
 }
 
