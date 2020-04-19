@@ -9,5 +9,5 @@ edition = "2018"
 [dependencies]
 
 [lib]
-name = "parser"
-path = "parser/lib.rs"
+name = "tokenizer"
+path = "tokenizer/lib.rs"
