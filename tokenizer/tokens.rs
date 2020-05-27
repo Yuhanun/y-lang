@@ -10,15 +10,12 @@ pub struct Tokenizer<'a> {
 
 impl<'a> Tokenizer<'a> {
     pub fn new(text: String) -> Self {
-        Self {
+        Self::from(
             text,
-            own_tokens: &["let", "=", ":", ";"],
-            delimiters: &[" ", "\n", "\t"],
-            except_between: &[("\"", "\"")],
-            result: vec![],
-            last_token_end: 0,
-            current_index: 0,
-        }
+            &["let", "=", ":", ";"],
+            &[" ", "\n", "\t"],
+            &[("\"", "\"")],
+        )
     }
 
     pub fn from(
@@ -38,91 +35,53 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    pub fn push_result(&self, begin: usize, end: usize) -> Option<(usize, usize)> {
-        println!(
-            "Pushing: begin={}, end={}, value={}, length={}",
-            begin,
-            end,
-            &self.text[begin..end],
-            end - begin,
-        );
-        if self.text[begin..end].trim().is_empty() {
-            return None;
-        }
-        Some((begin, end))
+    pub fn get_current_char(&self) -> char {
+        return self.text.chars().skip(self.current_index).next().unwrap();
+    }
+
+    pub fn push_token(&mut self, begin: usize, end: usize) {
+        self.result.push((begin, end));
+    }
+
+    pub fn push_between(&mut self, begin: usize, end: usize, bgn_tok: &str, end_tok: &str) {
+        self.push_token(begin, begin + bgn_tok.len());
+        self.push_token(begin + 1, end);
+        self.push_token(end + 1, end + 1 + end_tok.len());
+        self.current_index = end;
     }
 
     pub fn handle_between(&mut self) {
-        if self.current_index >= self.text.len() {
-            return;
-        }
-        for each in self.except_between {
-            if self.text[self.current_index..].starts_with(each.0) {
-                // find each.1
-                // skip until each.1, while pushing that token onto self.result
-                let found = self.text[self.current_index + 1..].find(each.1);
-                if found.is_none() {
-                    panic!("Expected {}, found EOF", each.1);
-                }
+        let min_index = self
+            .except_between
+            .iter()
+            .map(|elem| {
+                (self.text.find(elem.0), self.text[self.current_index + 1..].find(elem.1), elem.0, elem.1)
+            })
+            .min();
 
-                let pushable_tuple = self.push_result(
-                    self.current_index,
-                    self.current_index + found.unwrap() + each.1.len(),
-                );
-
-                if pushable_tuple.is_some() {
-                    let pushable_tuple = pushable_tuple.unwrap();
-                    self.result.push(pushable_tuple);
-                    self.current_index += pushable_tuple.1;
-                    self.last_token_end = self.current_index;
-                }
+        if let Some(item) = min_index {
+            let first_index = item.0;
+            let second_index = item.1;
+            if first_index.is_none() {
+                return;
             }
+            if second_index.is_none() {
+                return;
+            }
+            self.push_between(first_index.unwrap(), second_index.unwrap(), item.2, item.3);
         }
     }
 
-    pub fn handle_individual_tokens(&mut self) {
-        if self.current_index >= self.text.len() {
-            return;
-        }
-        for each in self.own_tokens {
-            if self.text[self.current_index..].starts_with(each) {
-                let pushable_tuple =
-                    self.push_result(self.current_index, self.current_index + each.len());
-                if pushable_tuple.is_some() {
-                    let pushable_tuple = pushable_tuple.unwrap();
-                    self.result.push(pushable_tuple);
-                    self.current_index = pushable_tuple.1;
-                    self.last_token_end = self.current_index;
-                }
-            }
-        }
-    }
+    pub fn handle_individual_tokens(&mut self) {}
 
-    pub fn handle_delimiters(&mut self) {
-        if self.current_index >= self.text.len() {
-            return;
-        }
-        for each in self.delimiters {
-            if self.text[self.current_index..].starts_with(each) {
-                let pushable_tuple =
-                    self.push_result(self.current_index, self.current_index + each.len());
-                if pushable_tuple.is_some() {
-                    let pushable_tuple = pushable_tuple.unwrap();
-                    self.result.push(pushable_tuple);
-                    self.current_index = pushable_tuple.1;
-                    self.last_token_end = self.current_index;
-                }
-                self.current_index += 1;
-            }
-        }
-        self.current_index += 1;
-    }
+    pub fn handle_delimiters(&mut self) {}
 
-    pub fn into_tokens(&mut self) -> Vec<String> {
+    pub fn get_tokens(&mut self) -> Vec<String> {
         while self.current_index < self.text.len() {
             self.handle_between();
             self.handle_individual_tokens();
             self.handle_delimiters();
+            self.current_index += 1;
         }
         self.result
             .iter()

@@ -7,12 +7,12 @@ fn main() {
     // println!("-------");
 
     let mut tokenizer = Tokenizer::new("\"hello world!\"".to_owned());
-    let tokens = tokenizer.into_tokens();
+    let tokens = tokenizer.get_tokens();
     println!("{:#?}", tokens);
     println!("-------");
 
     let mut tokenizer = Tokenizer::new(";;;;\"hello world!\"".to_owned());
-    let tokens = tokenizer.into_tokens();
+    let tokens = tokenizer.get_tokens();
     println!("{:#?}", tokens);
     println!("-------");
 }
