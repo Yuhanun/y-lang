@@ -14,10 +14,7 @@ impl Into<Result<Vec<String>, TokenizerError>> for Tokenizer {
 
 impl Tokenizer {
     pub fn from_file(filename: &str) -> std::io::Result<Self> {
-        let contents = std::fs::read_to_string(filename)?;
-        Ok(Self {
-            data: contents
-        })
+        std::fs::read_to_string(filename).map(|data| Self { data })
     }
 
     pub fn from(data: String) -> Self {
