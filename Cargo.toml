@@ -1,6 +1,9 @@
 [workspace]
 
 members = [
-    "tokenizer", 
+    "tokenizer",
+    "lexifier", 
+    "preparser",
+    "parser",
     "ylangc"
 ]
