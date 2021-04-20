@@ -1,5 +1,0 @@
-let data : int = 5;
-
-let mut x : String = "hello world!"; // comment
-// another comment
-

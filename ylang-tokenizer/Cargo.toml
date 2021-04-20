@@ -1,10 +1,8 @@
 [package]
-name = "parser"
+name = "ylang-tokenizer"
 version = "0.1.0"
-authors = ["Yuhanun Citgez <y.citgez@student.utwente.nl>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-preparser = { path="../preparser" }
